@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link rel="stylesheet" type="text/css" href="css/fullcalendar.min.css"/>
+<link rel="stylesheet" type="text/css" href="css/fullcalendar.print.min.css" media="print"/>
+<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css"/>
+<style type="text/css">
+body{ margin: 0; padding: 0; }
+footer{ height: 50px; }
+.menu-title{ color: #616161; font-weight: bold; }
+.menu-item{ cursor: move; display: inline-block; margin: 5px 0px 0px 5px; }
+.fc-center h2{ font-size: 15px; margin-top: 5px; }
+.add-btn{ width: 100%; }
+.refresh-btn{ cursor: pointer; position: absolute; padding: 10px 15px 10px 15px; right: 15px; color: #ccc; }
+.refresh-btn:hover{ color: #616161; }
+.title{ margin: 50px 0px 50px 0px; text-align: center; }
+</style>
+<script type="text/javascript" src="js/jquery-3.1.1.js"></script>
+<script type="text/javascript" src="js/jquery-ui.min.js"></script>
+<script type="text/javascript" src="js/bootstrap.min.js"></script>
+<script type="text/javascript" src="js/moment.min.js"></script>
+<script type="text/javascript" src="js/fullcalendar.min.js"></script>
+<script type="text/javascript">
+$(function ready(){
+
+	
+	//전역변수
+	var Gval = {
+		dts: [],
+		getYYYYmmDD: function( date ){
+    		var yyyy = date.getFullYear();
+			var mm = String( date.getMonth()+1 );
+			if( mm.length === 1 ){
+				mm = "0"+mm;
+			}
+			var dd = String( date.getDate() );
+			if( dd.length === 1 ){
+				dd = "0"+dd;
+			}
+			return yyyy+"-"+mm+"-"+dd;
+    	}
+	};
+	
+	//달력설정
+	$(".fc-center").css("font-size", "10px");
+	$('#calendar').fullCalendar({
+		header: {
+			left: 'prev,next',
+			center: 'title',
+			right: 'today'
+		},
+		editable: false,
+		droppable: false,
+		businessHours: true,
+		drop: function() {
+			$(this).remove();
+		},
+		dayClick: function( data ){
+			
+			if( !$("#menuReceive .menu-item").length > 0 ){
+				return;
+			}
+			
+			var yyyy = data._d.getFullYear();
+			var mm = data._d.getMonth();
+			var dd = data._d.getDate();
+			var date = data._d.getDay();
+			
+			var day0 = new Date( yyyy,mm,dd-date+1 );
+			var day1 = new Date( yyyy,mm,dd-date+2 );
+			var day2 = new Date( yyyy,mm,dd-date+3 );
+			var day3 = new Date( yyyy,mm,dd-date+4 );
+			var day4 = new Date( yyyy,mm,dd-date+5 );
+			var day5 = new Date( yyyy,mm,dd-date+6 );
+
+			Gval.dts = [];
+			Gval.dts.push( day0 );
+			Gval.dts.push( day1 );
+			Gval.dts.push( day2 );
+			Gval.dts.push( day3 );
+			Gval.dts.push( day4 );
+			
+			var startDay = moment( day0.getFullYear()+"-"+(day0.getMonth()+1)+"-"+day0.getDate(), "YYYY-MM-DD");
+			var endDay = moment( day5.getFullYear()+"-"+(day5.getMonth()+1)+"-"+day5.getDate(), "YYYY-MM-DD");
+			
+			$('#calendar').fullCalendar( 'select', startDay, endDay );
+  		  	$("#addBtn").prop("disabled", false);
+			
+		}
+	});
+	
+    //메뉴설정
+	$("#menuSend").sortable({
+   		connectWith: ".menu-list",    	
+    	receive: function( event, ui ) {
+    		ui.item.remove();
+    		$("#addBtn").prop("disabled", true);
+    	}
+   	}).disableSelection();
+    $("#menuReceive").sortable({
+   		connectWith: ".menu-list",    	
+    	receive: function( event, ui ) {
+    		$("#menuSend").append( ui.item.clone() );
+    		$("#addBtn").prop("disabled", true);
+    	}
+   	}).disableSelection();
+   
+    
+    //추가하기
+    $("#addBtn").click(function(){
+    	
+    	var param = [];
+    	
+    	//선택된 메뉴들
+    	var $menus = $("#menuReceive .menu-item");
+    	for( var i=0; i<Gval.dts.length; ++i ){
+    		var start = Gval.getYYYYmmDD( Gval.dts[i] );
+    		var randomNo = Math.floor( Math.random() * $menus.length );
+    		var title = $( $menus.splice( randomNo, 1 ) ).html();
+    		param.push( {title: title, start: start} );
+    	}
+    	//추가
+    	$('#calendar').fullCalendar( 'addEventSource', param );
+    	
+    });
+    
+    $("#refreshBtn").click(function(){
+    	
+    	Gval.dts = [];
+    	$("#addBtn").prop("disabled", true);
+    	$("#menuReceive").empty();
+    	
+    });
+    
+});
+</script>
+</head>
+<body>
+<div class="container">
+	<div class="row">
+		<div class="title" class="col-md-12">
+			<h1>
+				<strong>식단표 프로그램</strong>
+			</h1>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-12">
+			<div class="panel panel-primary">
+				<div class="panel-heading">
+					<h3 class="panel-title">
+						방법
+					</h3>
+				</div>
+				<div id="desc" class="panel-body">
+					<strong>1. 메뉴를 선정하세요.</strong>
+					<br>
+					<span>전체 메뉴에서 선정된 메뉴로 메뉴를 옮깁니다.</span>
+					<br><br>
+					<strong>2. 한 주를 선택하세요.</strong>
+					<br>
+					<span>달력에서 아무 날짜를 선택합니다.</span>
+					<br><br>
+					<strong>3. 추가하세요.</strong>
+					<br>
+					<span>추가하기 버튼을 누릅니다.</span>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-4">
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<h3 class="panel-title">전체 메뉴</h3>
+					<span id="refreshBtn" class="refresh-btn glyphicon glyphicon-repeat" aria-hidden="true"></span>
+				</div>
+				<div id="menuSend" class="menu-list panel-body">
+					<span class="menu-item label label-default">신영집밥</span>
+					<span class="menu-item label label-default">초대받은손님</span>
+					<span class="menu-item label label-default">고양이부엌</span>
+					<span class="menu-item label label-default">신전떡볶이</span>
+					<span class="menu-item label label-default">라멘</span>
+					<span class="menu-item label label-default">보영만두</span>
+					<span class="menu-item label label-default">버거킹</span>
+					<span class="menu-item label label-default">서브웨이</span>
+				</div>
+			</div>
+			<div class="panel panel-success">
+				<div class="panel-heading">
+					<h3 class="panel-title">선정된 메뉴</h3>
+				</div>
+				<div id="menuReceive" class="menu-list panel-body">
+				</div>
+			</div>
+			<div>
+				<button id="addBtn" type="button" class="add-btn btn btn-success" aria-label="Left Align" disabled>
+					추가하기 <span class="glyphicon glyphicon-share-alt" aria-hidden="true"></span>
+				</button>
+			</div>
+		</div>
+		<div class="col-md-8">
+			<div id="calendar" class="calendar"></div>
+		</div>
+		<footer class="col-md-12">
+		</footer>
+	</div>
+	
+</div>
+</body>
+</html>
