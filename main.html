@@ -115,6 +115,15 @@ $(function ready(){
     	
     	//선택된 메뉴들
     	var $menus = $("#menuReceive .menu-item");
+		var leakCnt = Gval.dts.length - $menus.length;
+    	
+    	//부족한 메뉴 보충
+    	if( leakCnt > 0 ){
+    		for( var i=0; i<leakCnt; ++i ){
+    			$menus.push( $($menus[i]).clone()[0] );
+    		}
+    	}
+    	
     	for( var i=0; i<Gval.dts.length; ++i ){
     		var start = Gval.getYYYYmmDD( Gval.dts[i] );
     		var randomNo = Math.floor( Math.random() * $menus.length );
